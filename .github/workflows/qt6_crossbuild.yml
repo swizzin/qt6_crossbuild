@@ -190,6 +190,9 @@ jobs:
 
       - name: Docker target - ldconfig - create /etc/ld.so.conf.d/qt6.conf
         run: |
+          docker exec --env-file env.custom -w /root/build multiarch mkdir -p DEBIAN
+          docker exec --env-file env.custom -w /root/build/DEBIAN multiarch bash -c "echo -e '#!/usr/bin/env bash\nldconfig' > postinst"
+          docker exec --env-file env.custom -w /root/build/DEBIAN multiarch bash -c "chmod +x postinst"
           docker exec --env-file env.custom -w /root/build multiarch mkdir -p etc/ld.so.conf.d
           docker exec --env-file env.custom -w /root/build/etc/ld.so.conf.d multiarch bash -c "echo '/${{ env.opt_dir_name }}/lib' > qt6.conf"
 
