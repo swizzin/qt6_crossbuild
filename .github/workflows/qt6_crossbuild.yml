@@ -37,15 +37,16 @@ jobs:
           - os_id: ubuntu
             os_version_id: bullseye
 
-    name: ${{ matrix.os_id }}:${{ matrix.os_version_id }} ${{ matrix.name }} ${{ matrix.arch }}
+    name: ${{ matrix.arch }} ${{ matrix.os_id }}:${{ matrix.os_version_id }} ${{ matrix.name }}
+
     env:
       opt_dir_name: "opt/local"
-      qt_short_version: "6.2"
+      qt_short_version: "6.4"
       cxx_standard: "17"
       prerelease: false
 
     steps:
-      - uses: actions/checkout@v2.3.5
+      - uses: actions/checkout@v3.1.0
 
       - name: Host - update
         run: sudo apt-get update
@@ -63,6 +64,9 @@ jobs:
         run: |
           echo "DEBIAN_FRONTEND=noninteractive" > env.custom
           echo "LANG=en_US.UTF-8" >> env.custom
+          echo "LANGUAGE=en_US.UTF-8" >> env.custom
+          echo "LC_ALL=en_US.UTF-8" >> env.custom
+          echo "LC_CTYPE=en_US.UTF-8" >> env.custom
           echo "PATH=/${{ env.opt_dir_name }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> env.custom
           echo "LD_LIBRARY_PATH=/${{ env.opt_dir_name }}/lib:/usr/lib/${{ matrix.CHOST }}:/usr/lib:/usr/local/lib" >> env.custom
           echo "CHOST=${{ matrix.CHOST }}" >> env.custom
@@ -75,6 +79,12 @@ jobs:
 
       - name: Host - Create docker binary test ${{ matrix.arch }} container
         run: docker run --name bintest -it -d --env-file env.custom -w /root --platform ${{ matrix.docker_platform }} -v ${{ github.workspace }}:/root ${{ matrix.docker_arch }}/${{ matrix.os_id }}:${{ matrix.os_version_id }}
+
+      - name: Docker target - Set locale data
+        run: |
+          docker exec --env-file env.custom multiarch /bin/bash -c 'echo LC_ALL=en_US.UTF-8 >> /etc/environment'
+          docker exec --env-file env.custom multiarch /bin/bash -c 'echo en_US.UTF-8 UTF-8 >> /etc/locale.gen'
+          docker exec --env-file env.custom multiarch /bin/bash -c 'echo LANG=en_US.UTF-8 > /etc/locale.conf'
 
       - name: Docker target - fix Ubuntu sources
         if: |
@@ -96,6 +106,12 @@ jobs:
           docker exec --env-file env.custom multiarch apt-get update
           docker exec --env-file env.custom bintest apt-get update
 
+      - name: Docker target - fix locales
+        run: |
+          docker exec --env-file env.custom multiarch apt-get install -y locales
+          docker exec --env-file env.custom multiarch locale-gen en_US.UTF-8
+          docker exec --env-file env.custom multiarch dpkg-reconfigure locales
+
       - name: Docker target - Run apt-get upgrade
         run: |
           docker exec --env-file env.custom multiarch apt-get upgrade -y
@@ -111,7 +127,19 @@ jobs:
         run: docker exec --env-file env.custom multiarch apt-get install -y crossbuild-essential-${{ matrix.arch }}
 
       - name: Docker target - apt-get install cross target deps
-        run: docker exec --env-file env.custom multiarch apt-get install -y zlib1g-dev:${{ matrix.arch }} libssl-dev:${{ matrix.arch }} libstdc++-*-dev:${{ matrix.arch }} libicu6*:${{ matrix.arch }} libicu-dev:${{ matrix.arch }}
+        run: docker exec --env-file env.custom multiarch apt-get install -y zlib1g-dev:${{ matrix.arch }} libssl-dev:${{ matrix.arch }} libstdc++-*-dev:${{ matrix.arch }} libicu6*:${{ matrix.arch }} libicu-dev:${{ matrix.arch }} libgeoip-dev:${{ matrix.arch }}
+
+      - name: Docker target - apt-get install cross target deps - only buster
+        if: matrix.os_version_id == 'buster'
+        run: docker exec --env-file env.custom multiarch apt-get install -y libdouble-conversion1:${{ matrix.arch }} libdouble-conversion-dev:${{ matrix.arch }}
+
+      - name: Docker target - apt-get install cross target deps - no bionic or buster
+        if: matrix.os_version_id != 'bionic' && matrix.os_version_id != 'buster'
+        run: docker exec --env-file env.custom multiarch apt-get install -y libdouble-conversion3:${{ matrix.arch }} libdouble-conversion-dev:${{ matrix.arch }} libmd4c0:${{ matrix.arch }} libmd4c-dev:${{ matrix.arch }}
+
+      - name: Docker target - apt-get install cross target deps - no bionic or buster or focal
+        if: matrix.os_version_id != 'bionic' && matrix.os_version_id != 'focal' && matrix.os_version_id != 'buster'
+        run: docker exec --env-file env.custom multiarch apt-get install -y libmd4c-html0:${{ matrix.arch }} libmd4c-html0-dev:${{ matrix.arch }}
 
       - name: Docker target - bionic - apt-get install gcc-8-base g++-8
         if: matrix.arch == 'amd64' && matrix.os_version_id == 'bionic'
@@ -125,12 +153,12 @@ jobs:
         if: matrix.os_version_id == 'bionic'
         run: |
           echo "CC=${{ matrix.CHOST }}-gcc-8" >> env.custom
-          echo "AR=${{ matrix.CHOST }}-ar-8" >> env.custom
+          echo "AR=${{ matrix.CHOST }}-gcc-ar-8" >> env.custom
           echo "CXX=${{ matrix.CHOST }}-g++-8" >> env.custom
 
       - name: Docker target - cmake and ninja download and install
         run: |
-          docker exec --env-file env.custom multiarch curl -sNL "https://github.com/userdocs/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
+          docker exec --env-file env.custom multiarch curl -sNL "https://github.com/swizzin/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
           docker exec --env-file env.custom multiarch dpkg -i ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
 
       - name: Docker target - qt get latest release info and set to env
@@ -154,13 +182,19 @@ jobs:
           docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch cmake -Wno-dev -Wno-deprecated -G Ninja -B build \
           -D QT_FEATURE_optimize_full=on \
           -D QT_FEATURE_gui=OFF -D QT_FEATURE_widgets=OFF -D QT_FEATURE_dbus=OFF -D QT_FEATURE_openssl_linked=on \
-          -D QT_FEATURE_system_pcre2=off -D QT_FEATURE_system_harfbuzz=off \
-          -D QT_FEATURE_system_libjpeg=off -D QT_FEATURE_system_libpng=off -D QT_FEATURE_system_freetype=off \
+          -D QT_FEATURE_system_pcre2=off -D QT_FEATURE_system_harfbuzz=off -D QT_FEATURE_system_freetype=off \
           -D QT_FEATURE_testlib=off -D QT_BUILD_EXAMPLES=off -D QT_BUILD_TESTS=off \
           -D CMAKE_BUILD_TYPE="release" \
           -D CMAKE_CXX_STANDARD="${{ env.cxx_standard }}" \
-          -D CMAKE_PREFIX_PATH="/root/build/${{ env.opt_dir_name }}" \
+          -D CMAKE_PREFIX_PATH="/${{ env.opt_dir_name }}" \
           -D CMAKE_INSTALL_PREFIX="/root/build/${{ env.opt_dir_name }}"
+        continue-on-error: true
+
+      - name: Archive logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.arch }}-${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-cmake-logs
+          path: qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles/*.log
 
       - name: Docker target - qt qtbase - cmake build
         run: docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch cmake --build build
@@ -178,7 +212,7 @@ jobs:
           docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch cmake -Wno-dev -Wno-deprecated -G Ninja -B build \
           -D CMAKE_BUILD_TYPE="release" \
           -D CMAKE_CXX_STANDARD="${{ env.cxx_standard }}" \
-          -D CMAKE_PREFIX_PATH="/root/build/${{ env.opt_dir_name }}" \
+          -D CMAKE_PREFIX_PATH="/${{ env.opt_dir_name }}" \
           -D CMAKE_INSTALL_PREFIX="/root/build/${{ env.opt_dir_name }}"
 
       - name: Docker target - qt qttools - cmake build
@@ -213,7 +247,7 @@ jobs:
         run: mv -f "${{ matrix.name }}_${{ env.qt_version }}_${{ matrix.arch }}.deb" "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ matrix.arch }}.deb"
 
       - name: Host - "Create release - tag - assets"
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.11.1
         with:
           prerelease: ${{ env.prerelease }}
           artifacts: "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ matrix.arch }}.deb"
