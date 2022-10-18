@@ -158,8 +158,8 @@ jobs:
 
       - name: Docker target - cmake and ninja download and install
         run: |
-          docker exec --env-file env.custom multiarch curl -sNL "https://github.com/swizzin/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
-          docker exec --env-file env.custom multiarch dpkg -i ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
+          docker exec --env-file env.custom multiarch curl -sNL "https://github.com/swizzin/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-swizzin-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-swizzin-${{ matrix.arch }}.deb
+          docker exec --env-file env.custom multiarch dpkg -i ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-swizzin-${{ matrix.arch }}.deb
 
       - name: Docker target - qt get latest release info and set to env
         run: |
@@ -233,7 +233,7 @@ jobs:
           docker exec --env-file env.custom -w /root/build/etc/ld.so.conf.d multiarch bash -c "echo '/${{ env.opt_dir_name }}/lib' > qt6.conf"
 
       - name: Host - Create deb packages
-        uses: jiro4989/build-deb-action@v2
+        uses: jiro4989/build-deb-action@v2.5.0
         with:
           package: "${{ matrix.name }}"
           package_root: build
