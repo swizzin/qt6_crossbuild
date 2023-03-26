@@ -193,11 +193,16 @@ jobs:
           -D CMAKE_INSTALL_PREFIX="/root/build/${{ env.opt_dir_name }}"
         continue-on-error: true
 
+      - name: Copy out log from root
+        run: |
+          sudo mkdir /home/temp
+          sudo cp /root/qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles/*.log /home/temp
+
       - name: Archive logs
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.arch }}-${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-cmake-logs
-          path: qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles/*.log
+          path: /home/temp/*.log
 
       - name: Docker target - qt qtbase - cmake build
         run: docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch cmake --build build
