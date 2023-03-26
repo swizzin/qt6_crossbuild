@@ -196,7 +196,7 @@ jobs:
       - name: Copy out log from root
         run: |
           sudo mkdir /home/temp
-          sudo cp /root/qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles/*.log /home/temp
+          sudo cp qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles/*.log /home/temp
 
       - name: Archive logs
         uses: actions/upload-artifact@v3
