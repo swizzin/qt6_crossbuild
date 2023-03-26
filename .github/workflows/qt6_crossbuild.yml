@@ -196,6 +196,9 @@ jobs:
       - name: Copy out log from root
         run: |
           sudo mkdir /home/temp
+          sudo ls -la ${{ github.workspace }}/qtbase-everywhere-src-${{ env.qt_version }}/
+          sudo ls -la ${{ github.workspace }}/qtbase-everywhere-src-${{ env.qt_version }}/build/
+          sudo ls -la ${{ github.workspace }}/qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles
           sudo cp ${{ github.workspace }}/qtbase-everywhere-src-${{ env.qt_version }}/build/CMakeFiles/*.log /home/temp
 
       - name: Archive logs
