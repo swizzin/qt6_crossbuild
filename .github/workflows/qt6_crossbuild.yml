@@ -10,7 +10,7 @@ jobs:
       matrix:
         name: [qt6-swizzin]
         os_id: [debian, ubuntu]
-        os_version_id: [buster, bullseye, bionic, focal, jammy]
+        os_version_id: [buster, bullseye, bookworm, bionic, focal, jammy]
         arch: [amd64, armhf, arm64]
         include:
           - arch: amd64
@@ -36,6 +36,8 @@ jobs:
             os_version_id: buster
           - os_id: ubuntu
             os_version_id: bullseye
+          - os_id: ubuntu
+            os_version_id: bookworm
 
     name: ${{ matrix.arch }} ${{ matrix.os_id }}:${{ matrix.os_version_id }} ${{ matrix.name }}
 
@@ -266,6 +268,6 @@ jobs:
           replacesArtifacts: true
           tag: "${{ env.qt_version }}"
           name: "qt ${{ env.qt_version }}"
-          body: "Built with cmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Debian Buster Bullseye and Ubuntu Bionic Focal Jammy"
+          body: "Built with cmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Debian Buster Bullseye Bookworm and Ubuntu Bionic Focal Jammy"
           allowUpdates: true
           token: "${{ secrets.GITHUB_TOKEN }}"
