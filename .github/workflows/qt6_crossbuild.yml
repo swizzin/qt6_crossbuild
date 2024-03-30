@@ -43,7 +43,7 @@ jobs:
 
     env:
       opt_dir_name: "opt/local"
-      qt_short_version: "6.4"
+      qt_short_version: "6.6"
       cxx_standard: "17"
       prerelease: false
 
