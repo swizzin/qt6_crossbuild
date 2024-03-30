@@ -93,8 +93,8 @@ jobs:
 
       - name: Docker - cmake and ninja download and install
         run: |
-          docker exec multiarch curl -sNL "https://github.com/swizzin/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb
-          docker exec multiarch sudo dpkg -i ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb
+          docker exec multiarch curl -sNL "https://github.com/swizzin/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-swizzin-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-swizzin-${{ matrix.arch }}.deb
+          docker exec multiarch sudo dpkg -i ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-swizzin-${{ matrix.arch }}.deb
 
       - name: Docker - zlib-ng download and install
         run: |
