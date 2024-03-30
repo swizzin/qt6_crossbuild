@@ -93,7 +93,7 @@ jobs:
 
       - name: Docker - cmake and ninja download and install
         run: |
-          docker exec multiarch curl -sNL "https://github.com/swizzin/cmake-crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb
+          docker exec multiarch curl -sNL "https://github.com/swizzin/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb
           docker exec multiarch sudo dpkg -i ${{ matrix.os_id }}-${{ matrix.os_codename }}-cmake-${{ matrix.arch }}.deb
 
       - name: Docker - zlib-ng download and install
@@ -245,7 +245,7 @@ jobs:
           replacesArtifacts: true
           tag: "${{ env.qt_version }}"
           name: "qt ${{ env.qt_version }}"
-          body: "Built with cmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Debian Buster Bullseye and Ubuntu bionic Focal Jammy"
+          body: "Built with cmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Debian Bullseye/Bookworm and Ubuntu Focal/Jammy"
           allowUpdates: true
 
   rerun-on-failure:
