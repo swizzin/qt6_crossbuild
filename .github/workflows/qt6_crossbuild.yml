@@ -31,7 +31,7 @@ jobs:
       matrix:
         name: [qt6-swizzin]
         os_id: [debian, ubuntu]
-        os_codename: [bullseye, bookworm, focal, jammy]
+        os_codename: [bullseye, bookworm, focal, jammy, noble]
         arch: [amd64, armhf, arm64]
         exclude:
           - os_id: debian
@@ -42,12 +42,14 @@ jobs:
             os_codename: bullseye
           - os_id: ubuntu
             os_codename: bookworm
+          - os_id: ubuntu
+            os_codename: noble
 
     name: ${{ matrix.os_id }}:${{ matrix.os_codename }} ${{ matrix.name }} ${{ matrix.arch }}
 
     env:
       opt_dir_name: "opt/local"
-      qt_short_version: "6.6"
+      qt_short_version: "6.5"
       cxx_standard: "17"
       GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
