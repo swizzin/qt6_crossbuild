@@ -38,12 +38,13 @@ jobs:
             os_codename: focal
           - os_id: debian
             os_codename: jammy
+          - os_id: debian
+            os_codename: noble
           - os_id: ubuntu
             os_codename: bullseye
           - os_id: ubuntu
             os_codename: bookworm
-          - os_id: ubuntu
-            os_codename: noble
+
 
     name: ${{ matrix.os_id }}:${{ matrix.os_codename }} ${{ matrix.name }} ${{ matrix.arch }}
 
